@@ -1,5 +1,5 @@
 from PyQt5 import uic
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QMainWindow, QDialog
 
 
 class MainWindow(QMainWindow):
@@ -9,8 +9,6 @@ class MainWindow(QMainWindow):
         uic.loadUi('assets/mainwindow.ui', self)
         self.app = app
         self.connect_signals()
-        self.show()
-        print('Showed')
     
     def connect_signals(self):
         self.btnConnect.clicked.connect(self.__btnConnect_clicked)
@@ -103,3 +101,38 @@ class MainWindow(QMainWindow):
     
     def __actCalibrateServos_triggered(self):
         print('triggered')
+
+
+class ServoCalibrationDialog(QDialog):
+
+    def __init__(self, app):
+        super().__init__()
+        uic.loadUi('assets/servocalibration.ui', self)
+        self.app = app
+        self.connect_signals()
+    
+    def connect_signals(self):
+        self.btnOpen.clicked.connect(self.__btnOpen_clicked)
+        self.btnSave.clicked.connect(self.__btnSave_clicked)
+        self.btnRead.clicked.connect(self.__btnRead_clicked)
+        self.btnProg.clicked.connect(self.__btnProg_clicked)
+    
+    def __btnOpen_clicked(self):
+        print('clicked')
+    
+    def __btnSave_clicked(self):
+        print('clicked')
+    
+    def __btnRead_clicked(self):
+        print('clicked')
+    
+    def __btnProg_clicked(self):
+        print('clicked')
+
+
+class AboutDialog(QDialog):
+
+    def __init__(self, app):
+        super().__init__()
+        uic.loadUi('assets/about.ui', self)
+        self.app = app
