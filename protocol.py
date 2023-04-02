@@ -38,7 +38,24 @@ class MotorID(Enum):
 
 
 LoopData = namedtuple('LoopData', 'beginMark endMark numRepetitions')
-CalibrationData = namedtuple('CalibrationData', 'motorID openedAngle closedAngle')
+
+
+class CalibrationData(namedtuple('CalibrationData', 'motorID openedAngle closedAngle')):
+    @classmethod
+    def from_dict(cls, d: dict):
+        if any(f not in d for f in cls._fields):
+            raise KeyError(f'bad dict for CalibrationData: {d}')
+        motorID = d['motorID']
+        opened_angle = abs(int(d['openedAngle']))
+        closed_angle = abs(int(d['closedAngle']))
+
+        if motorID not in (e.value for e in MotorID):
+            raise ValueError(motorID)
+        motorID = MotorID(motorID)
+
+        if opened_angle > 180 or closed_angle > 180:
+            raise ValueError(f'angles: {opened_angle}, {closed_angle}')
+        return cls(motorID, opened_angle, closed_angle)
 
 
 class CommandTypeBadError(ValueError):
@@ -195,7 +212,7 @@ def parse_response(string):
                 raise ResponseFormatError(part)
             if not all(subpart.isnumeric() for subpart in subparts):
                 raise ResponseValueError(part)
-            motor_id = i - 1
+            motor_id = MotorID(str(i - 1))
             opened_angle = abs(int(subparts[0]))
             closed_angle = abs(int(subparts[1]))
             if opened_angle > 180 or closed_angle > 180:
@@ -207,6 +224,8 @@ def parse_response(string):
 
 
 if __name__ == '__main__':
+    import json
+
     print(Command.from_str('G,0\n'), end='')
     print(Command.from_str('G,1\n'), end='')
     print(Command.from_str('F,0\n'), end='')
@@ -234,15 +253,19 @@ if __name__ == '__main__':
 
     calibration = parse_response('c,0 180,0 180,10 170,20 170,30 150\n')._asdict()['data']
     calibration = [c._asdict() for c in calibration]
-    print(calibration, '\n')
+    for c in calibration:
+        c['motorID'] = c['motorID'].value
+    print(json.dumps(calibration), '\n')
 
-    print([CalibrationData(**c) for c in calibration], '\n')
+    #del calibration[2]['openedAngle']
+    print([CalibrationData.from_dict(c) for c in calibration], '\n')
 
-    import json
+    
     print(json.dumps([str(c) for c in [
         Command.from_str('G,0\n'),
         Command.from_str('F,2\n'),
         Command.from_str('W,500000\n'),
         Command.from_str('E\n'),
-        Command.from_str('P,3,6,5\n')
+        Command.from_str('P,3,6,5\n'),
+        Command.from_str('C,2,20,175\n')
     ]], indent=4))
