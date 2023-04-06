@@ -542,9 +542,12 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QLabel" name="label">
+       <widget class="QRadioButton" name="rbBeforeLoop">
         <property name="text">
-         <string>До цикла:</string>
+         <string>До цикла</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -567,7 +570,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
-         <widget class="QLabel" name="label_2">
+         <widget class="QRadioButton" name="rbLoop">
           <property name="text">
            <string>Цикл</string>
           </property>
@@ -619,9 +622,9 @@
        </spacer>
       </item>
       <item>
-       <widget class="QLabel" name="label_3">
+       <widget class="QRadioButton" name="rbAfterLoop">
         <property name="text">
-         <string>После цикла:</string>
+         <string>После цикла</string>
         </property>
        </widget>
       </item>

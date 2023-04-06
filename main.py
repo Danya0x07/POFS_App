@@ -8,15 +8,9 @@ import sys
 
 from PyQt5.QtWidgets import QApplication
 
-from view_controller import MainWindow, ServoCalibrationDialog, AboutDialog
+from app import App
 
 qApp = QApplication([])
-mw = MainWindow(None)
-swc = ServoCalibrationDialog(None)
-abd = AboutDialog(None)
-
-mw.show()
-swc.show()
-abd.show()
+app = App()
 
 sys.exit(qApp.exec_())
