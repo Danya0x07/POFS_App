@@ -18,6 +18,27 @@ class App:
     def show_servo_calibration(self):
         self.servo_calibration_dialog.show()
     
+    def update_available_ports(self):
+        self.mainwindow.set_available_ports_list(SerialPort.get_available_ports())
+    
+    def serial_connect(self):
+        port_name = self.mainwindow.get_selected_port_name()
+        if not port_name:
+            self.mainwindow.show_msg("Ну порт же надо выбрать сначала...")
+            return
+
+        if self.serial.open(port_name):
+            self.mainwindow.show_msg("Соединение установлено")
+        else:
+            self.mainwindow.show_msg("Ой, порт {} не открывается!".format(port_name))
+
+    def serial_disconnect(self):
+        self.serial.close()
+        self.mainwindow.show_msg("Соединение закрыто")
+
+    def connection_established(self):
+        return self.serial.is_open()
+    
     def send_command(self, cmd):
         pass
 

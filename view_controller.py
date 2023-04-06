@@ -135,10 +135,17 @@ class MainWindow(QMainWindow):
                 self.show_msg("Эта команда не для записи")
 
     def __btnConnect_clicked(self):
-        print('clicked')
+        # Если соединение уже открыто, закрываем его, иначе открываем.
+        if self.app.connection_established():
+            self.app.serial_disconnect()
+            self.btnConnect.setText("Подключить")
+        else:
+            self.app.serial_connect()
+            if self.app.connection_established():
+                self.btnConnect.setText("Отключить")
 
     def __btnRefreshPorts_clicked(self):
-        print('clicked')
+        self.app.update_available_ports()
 
     def __btnFlapOpen_clicked(self):
         cmd = Command(CommandType.SET_FLAP, FlapStatus.OPENED)
