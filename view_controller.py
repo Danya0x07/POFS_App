@@ -1,5 +1,5 @@
 from PyQt5 import uic
-from PyQt5.QtWidgets import QMainWindow, QDialog
+from PyQt5.QtWidgets import QMainWindow, QDialog, QFileDialog
 
 from protocol import (Command, CommandType, FlapStatus,
                       FilterState, MotorID, CalibrationData)
@@ -68,6 +68,9 @@ class MainWindow(QMainWindow):
 
     def get_loop_times(self):
         return self.spbLoopTimes.value()
+    
+    def set_loop_times(self, loop_times):
+        self.spbLoopTimes.setValue(loop_times)
 
     def _get_selected_list(self):
         if self.rbBeforeLoop.isChecked():
@@ -86,12 +89,23 @@ class MainWindow(QMainWindow):
             command = MainWindow._cmd_from_readable(txt)
             commands.append(command)
         return commands
-
+    
+    @staticmethod
+    def _set_section_commands(selected_list, commands):
+        selected_list.clear()
+        for cmd in commands:
+            MainWindow.record_command(cmd, selected_list)
+            
     def get_algorithm(self):
         before = self._get_section_commands(self.listPreProcessing)
         loop = self._get_section_commands(self.listLoop)
         after = self._get_section_commands(self.listPostProcessing)
         return before, loop, after
+    
+    def set_algorithm(self, before, loop, after):
+        self._set_section_commands(self.listPreProcessing, before)
+        self._set_section_commands(self.listLoop, loop)
+        self._set_section_commands(self.listPostProcessing, after)
 
     @staticmethod
     def _cmd_to_readable(cmd):
@@ -114,11 +128,11 @@ class MainWindow(QMainWindow):
             return Command(CommandType.WAIT, int(parts[1]) * 1000)
         raise Exception('До седова дойти не должно было. #2')
 
-    def record_command(self, cmd):
-        selected_list = self._get_selected_list()
+    @staticmethod
+    def record_command(cmd, selected_list):
         row = selected_list.currentRow() + 1
         if selected_list is not None:
-            cmd = self._cmd_to_readable(cmd)
+            cmd = MainWindow._cmd_to_readable(cmd)
             selected_list.insertItem(row, cmd)
             selected_list.setCurrentRow(row)
 
@@ -130,7 +144,8 @@ class MainWindow(QMainWindow):
                 self.show_msg("Эта команда не для RealTime")
         elif self.rbModeRecording.isChecked():
             if recording:
-                self.record_command(cmd)
+                selected_list = self._get_selected_list()
+                self.record_command(cmd, selected_list)
             else:
                 self.show_msg("Эта команда не для записи")
 
@@ -218,10 +233,29 @@ class MainWindow(QMainWindow):
         pass
 
     def __actAlgorithmOpen_triggered(self):
-        print('triggered')
+        filename, _ = QFileDialog.getOpenFileName(self, "Загрузить алгоритм", filter='JSON Files (*.json)')
+        algorithm = self.app.load_algorithm(filename)
+        if algorithm is not None:
+            before = algorithm['before']
+            loop = algorithm['loop']
+            after = algorithm['after']
+            loop_times = algorithm['loop_times']
+            self.set_algorithm(before, loop, after)
+            self.set_loop_times(loop_times)
 
     def __actAlgorithmSave_triggered(self):
-        print('triggered')
+        before, loop, after = self.get_algorithm()
+        loop_times = self.get_loop_times()
+        algorithm = {
+            'before': [str(cmd) for cmd in before],
+            'loop': [str(cmd) for cmd in loop],
+            'after': [str(cmd) for cmd in after],
+            'loop_times': loop_times
+        }
+        filename, _ = QFileDialog.getSaveFileName(self, "Сохранить алгоритм", filter='JSON Files (*.json)')
+        if not filename.endswith('.json'):
+            filename += '.json'
+        self.app.save_algorithm(algorithm, filename)
 
     def __actAbout_triggered(self):
         self.app.show_about()
