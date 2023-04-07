@@ -277,12 +277,34 @@ class ServoCalibrationDialog(QDialog):
         self.btnSave.clicked.connect(self.__btnSave_clicked)
         self.btnRead.clicked.connect(self.__btnRead_clicked)
         self.btnProg.clicked.connect(self.__btnProg_clicked)
+    
+    def set_table_contents(self, contents):
+        for i in range(self.table.rowCount()):
+            for j in range(self.table.columnCount()):
+                self.table.item(i, j).setText(str(contents[i][j]))
+    
+    def get_table_contents(self):
+        contents = []
+        for i in range(self.table.rowCount()):
+            row = []
+            for j in range(self.table.columnCount()):
+                angle = self.table.item(i, j).text()
+                row.append(angle)
+            contents.append(row)
+        return contents
 
     def __btnOpen_clicked(self):
-        print('clicked')
+        filename, _ = QFileDialog.getOpenFileName(self, "Загрузить калибровочные углы", filter='JSON Files (*.json)')
+        calibration = self.app.load_servo_calibration(filename)
+        if calibration is not None:
+            self.set_table_contents(calibration)
 
     def __btnSave_clicked(self):
-        print('clicked')
+        raw_calibration = self.get_table_contents()
+        filename, _ = QFileDialog.getSaveFileName(self, "Сохранить калибровчные углы", filter='JSON Files (*.json)')
+        if not filename.endswith('.json'):
+            filename += '.json'
+        self.app.save_servo_calibration(raw_calibration, filename)
 
     def __btnRead_clicked(self):
         print('clicked')

@@ -61,12 +61,12 @@ class App:
 
     def load_algorithm(self, filename):
         with open(filename, 'r') as f:
-            string = json.load(f)
+            data = json.load(f)
         try:
-            before = [Command.from_str(cmd) for cmd in string['before']]
-            loop = [Command.from_str(cmd) for cmd in string['loop']]
-            after = [Command.from_str(cmd) for cmd in string['after']]
-            loop_times = abs(int(string['loop_times']))
+            before = [Command.from_str(cmd) for cmd in data['before']]
+            loop = [Command.from_str(cmd) for cmd in data['loop']]
+            after = [Command.from_str(cmd) for cmd in data['after']]
+            loop_times = abs(int(data['loop_times']))
         except (KeyError, TypeError):
             self.mainwindow.show_msg('Плохой файл', 3000)
         except ValueError as e:
@@ -84,7 +84,29 @@ class App:
                 self.mainwindow.show_msg(
                     'Считанные команды всраты по сути своей.', 3000)
         return None
+    
+    def save_servo_calibration(self, raw_calibration, filename):
+        if all(self.angles_row_valid(row) for row in raw_calibration):
+            calibration = [list(map(int, row)) for row in raw_calibration]
+            string = json.dumps(calibration, indent=4)
+            with open(filename, 'w') as f:
+                f.write(string)
+        else:
+            self.mainwindow.show_msg('В таблице некоторый мусор, проверьте!')
+    
+    def load_servo_calibration(self, filename):
+        with open(filename, 'r') as f:
+            data = json.load(f)
+        if (type(data) == list and len(data) == 5
+                and all(type(r) == list and self.angles_row_valid(r) for r in data)):
+            return data
+        else:
+            self.mainwindow.show_msg('Данные некорректны')
+            return None
 
     def sequence_valid(self, sequence):
         return all(cmd.type in (CommandType.SET_FLAP, CommandType.SET_FILTER, CommandType.WAIT)
                    for cmd in sequence)
+    
+    def angles_row_valid(self, row):
+        return all(str(a).isnumeric() and 0 <= int(a) <= 180 for a in row)
