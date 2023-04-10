@@ -14,11 +14,20 @@ class App:
         self.serial = SerialPort(self)
         self._command_queue = deque()
         self._response_queue = deque()
-        self._device_is_executing = False
+        self.__device_is_executing = False
         self._expectations = None
         self.__last_algorithm_cmd = None
 
         self.mainwindow.show()
+    
+    @property
+    def device_is_executing(self):
+        return self.__device_is_executing
+    
+    @device_is_executing.setter
+    def device_is_executing(self, executing):
+        self.__device_is_executing = executing
+        self.mainwindow.show_executing(executing)
 
     def show_about(self):
         self.about_dialog.show()
@@ -54,7 +63,7 @@ class App:
             self.mainwindow.show_msg('Порт открой сперва')
             return
         
-        if not self._device_is_executing or cmd.type == CommandType.EMERGENCY:
+        if not self.device_is_executing or cmd.type == CommandType.EMERGENCY:
             self._expectations = self.generate_expected_response(cmd)
             if cmd.type == CommandType.EXECUTE_PROGRAM:
                 if self.__last_algorithm_cmd is None:
@@ -62,16 +71,16 @@ class App:
                     self._expectations.clear()
                     return
                 self._expectations[0] = Response(ResponseType.EXEC_FINISH, self.__last_algorithm_cmd)
-                self._device_is_executing = True
+                self.device_is_executing = True
             self.serial.write(str(cmd))
             print(f'Sending: {repr(str(cmd))}')
         else:
             self.mainwindow.show_msg('В данный момент выполняется какой-то алгоритм', 3000)
 
     def send_reset(self):
-        if self._device_is_executing:
+        if self.device_is_executing:
             self.send_command(Command(CommandType.EMERGENCY))
-            self._device_is_executing = False
+            self.device_is_executing = False
         else:
             self.send_command(Command(CommandType.RESET))
     
@@ -80,7 +89,7 @@ class App:
             self.mainwindow.show_msg('Порт открой сперва')
             return
         
-        if self._device_is_executing:
+        if self.device_is_executing:
             self.mainwindow.show_msg('В данный момент выполняется какой-то алгоритм', 3000)
             return
 
@@ -117,7 +126,7 @@ class App:
             self.mainwindow.show_msg('Порт открой сперва')
             return
         
-        if self._device_is_executing:
+        if self.device_is_executing:
             self.mainwindow.show_msg('В данный момент выполняется какой-то алгоритм', 3000)
             return
         
@@ -255,14 +264,14 @@ class App:
                     else:
                         self.mainwindow.show_msg('Рассинхронизация: нечем продолжить диалог')
                 else:
-                    self._device_is_executing = False
+                    self.device_is_executing = False
 
         elif response.type == ResponseType.PARSING_ERR:
             self.mainwindow.show_msg('Контроллер подавился')
-            self._device_is_executing = False
+            self.device_is_executing = False
         elif response.type == ResponseType.DISPATCH_ERR:
             self.mainwindow.show_msg('Контроллер растерялся')
-            self._device_is_executing = False
+            self.device_is_executing = False
         elif response.type == ResponseType.CALIB_DATA:
             calibration = [[c.openedAngle, c.closedAngle] for c in response.data]
             self.servo_calibration_dialog.set_table_contents(calibration)

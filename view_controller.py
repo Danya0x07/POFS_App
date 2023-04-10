@@ -48,6 +48,9 @@ class MainWindow(QMainWindow):
 
     def show_msg(self, msg, timeout=2000):
         self.statusBar().showMessage(msg, timeout)
+    
+    def show_executing(self, executing):
+        self.btnAlgorithmExecute.setStyleSheet('background-color: green' if executing else '')
 
     def set_available_ports_list(self, port_names):
         self.cbbSerialPort.clear()
