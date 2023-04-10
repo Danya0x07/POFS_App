@@ -1,5 +1,6 @@
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QDialog, QFileDialog
+from PyQt5.QtGui import QPixmap
 
 from protocol import (Command, CommandType, FlapStatus,
                       FilterState, MotorID, CalibrationData)
@@ -339,3 +340,5 @@ class AboutDialog(QDialog):
         super().__init__()
         uic.loadUi('assets/about.ui', self)
         self.app = app
+        pm = QPixmap('assets/Dx07_12.png').scaled(100, 40)
+        self.lblLogo.setPixmap(pm)
