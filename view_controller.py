@@ -213,7 +213,10 @@ class MainWindow(QMainWindow):
     def __btnAlgorithmSend_clicked(self):
         before, loop, after = self.get_algorithm()
         loop_times = self.get_loop_times()
-        self.app.send_algorithm(before, loop, after, loop_times)
+        if before or loop or after:
+            self.app.send_algorithm(before, loop, after, loop_times)
+        else:
+            self.show_msg('Слать нечего, алгоритм пустой')
 
     def __btnAlgorithmClear_clicked(self):
         self.listPreProcessing.clear()
@@ -234,6 +237,9 @@ class MainWindow(QMainWindow):
 
     def __actAlgorithmOpen_triggered(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Загрузить алгоритм", filter='JSON Files (*.json)')
+        if not filename:
+            return
+        
         algorithm = self.app.load_algorithm(filename)
         if algorithm is not None:
             before = algorithm['before']
@@ -252,7 +258,11 @@ class MainWindow(QMainWindow):
             'after': [str(cmd) for cmd in after],
             'loop_times': loop_times
         }
+
         filename, _ = QFileDialog.getSaveFileName(self, "Сохранить алгоритм", filter='JSON Files (*.json)')
+        if not filename:
+            return
+        
         if not filename.endswith('.json'):
             filename += '.json'
         self.app.save_algorithm(algorithm, filename)
@@ -295,6 +305,9 @@ class ServoCalibrationDialog(QDialog):
 
     def __btnOpen_clicked(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Загрузить калибровочные углы", filter='JSON Files (*.json)')
+        if not filename:
+            return
+        
         calibration = self.app.load_servo_calibration(filename)
         if calibration is not None:
             self.set_table_contents(calibration)
@@ -302,15 +315,19 @@ class ServoCalibrationDialog(QDialog):
     def __btnSave_clicked(self):
         raw_calibration = self.get_table_contents()
         filename, _ = QFileDialog.getSaveFileName(self, "Сохранить калибровчные углы", filter='JSON Files (*.json)')
+        if not filename:
+            return
+        
         if not filename.endswith('.json'):
             filename += '.json'
         self.app.save_servo_calibration(raw_calibration, filename)
 
     def __btnRead_clicked(self):
-        print('clicked')
+        self.app.send_command(Command(CommandType.PRINT_CALIBRATION))
 
     def __btnProg_clicked(self):
-        print('clicked')
+        raw_calibration = self.get_table_contents()
+        self.app.send_calibration(raw_calibration)
 
 
 class AboutDialog(QDialog):

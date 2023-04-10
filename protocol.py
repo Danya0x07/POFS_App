@@ -95,6 +95,12 @@ class Command:
     def __repr__(self):
         return str(self)
     
+    def __eq__(self, other):
+        if self.type == other.type and self.arg == other.arg:
+            return True
+        else:
+            return False
+    
     @classmethod
     def from_str(cls, string):
         if string[-1] != '\n':
@@ -157,11 +163,11 @@ class Command:
 
 
 class ResponseType(Enum):
-    PARSING_OK = 'o'
-    PARSING_ERR = 'p'
-    DISPATCH_ERR = 'd'
-    EXEC_FINISH = 'f'
-    CALIB_DATA = 'c'
+    PARSING_OK = '0'
+    PARSING_ERR = '1'
+    DISPATCH_ERR = '2'
+    EXEC_FINISH = '3'
+    CALIB_DATA = '4'
 
 
 class ResponseTypeBadError(ValueError):
